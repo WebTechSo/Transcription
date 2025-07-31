@@ -1,8 +1,9 @@
-// Content script for Google Meet Transcript Capturer
+// Enhanced Content script for Google Meet Transcript Capturer
 let transcriptData = [];
 let isCapturing = false;
 let transcriptWindow = null;
 let lastProcessedText = '';
+let observer = null;
 
 // Function to create the transcript window
 function createTranscriptWindow() {
@@ -150,47 +151,42 @@ function updateTranscriptDisplay() {
   content.scrollTop = content.scrollHeight;
 }
 
-// Function to capture transcript data from Google Meet
-function captureTranscript() {
-  // Multiple strategies to find transcript elements
+// Enhanced function to find and monitor transcript elements
+function findTranscriptElements() {
   const selectors = [
-    // Live captions container
+    // Google Meet specific selectors
     '[data-mdc-dialog-id*="transcript"]',
     '[aria-label*="transcript"]',
     '[aria-label*="caption"]',
     '[data-speaker-id]',
-    '.transcript-item',
-    '.caption-item',
-    // Google Meet specific selectors
-    '[data-is-muted="false"] [data-speaker-id]',
-    '[data-is-muted="false"] [aria-label*="said"]',
-    // Live captions text
-    '[data-is-muted="false"] div[role="log"]',
-    '[data-is-muted="false"] div[aria-live="polite"]',
-    // Alternative selectors
+    // Live captions
     'div[role="log"]',
     'div[aria-live="polite"]',
-    // More specific Google Meet selectors
-    '[data-is-muted="false"] span',
-    '[data-is-muted="false"] div',
-    // Fallback: look for any text that might be captions
+    'div[aria-live="assertive"]',
+    // More specific selectors
+    '[data-is-muted="false"] div[role="log"]',
+    '[data-is-muted="false"] div[aria-live="polite"]',
+    // Caption containers
+    'div[data-caption-container]',
+    'div[data-caption-text]',
+    // Fallback selectors
     'div:contains("said")',
-    'span:contains("said")'
+    'span:contains("said")',
+    // Look for any div that might contain captions
+    'div[class*="caption"]',
+    'div[class*="transcript"]',
+    'span[class*="caption"]',
+    'span[class*="transcript"]'
   ];
 
   let foundElements = [];
   
-  // Try each selector
   selectors.forEach(selector => {
     try {
       const elements = document.querySelectorAll(selector);
       elements.forEach(el => {
-        const text = el.textContent?.trim();
-        if (text && text.length > 0 && text !== lastProcessedText) {
-          foundElements.push({
-            element: el,
-            text: text
-          });
+        if (el.textContent && el.textContent.trim().length > 0) {
+          foundElements.push(el);
         }
       });
     } catch (e) {
@@ -198,65 +194,92 @@ function captureTranscript() {
     }
   });
 
-  // Process found elements
-  foundElements.forEach(({element, text}) => {
-    // Skip if we've already processed this text
-    if (text === lastProcessedText) return;
-    
-    // Extract speaker name and message
-    let speaker = 'Unknown';
-    let message = text;
-    
-    // Try to extract speaker from various patterns
-    const patterns = [
-      /^([^:]+):\s*(.+)$/,  // "Speaker: message"
-      /^([^:]+)\s+said:\s*(.+)$/,  // "Speaker said: message"
-      /^([^:]+)\s*-\s*(.+)$/,  // "Speaker - message"
-      /^([^:]+)\s*:\s*(.+)$/   // "Speaker : message" (with spaces)
-    ];
-    
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) {
-        speaker = match[1].trim();
-        message = match[2].trim();
-        break;
-      }
+  return foundElements;
+}
+
+// Function to process and capture transcript text
+function processTranscriptText(text) {
+  if (!text || text.length === 0 || text === lastProcessedText) {
+    return null;
+  }
+
+  // Skip UI text
+  const uiKeywords = [
+    'button', 'menu', 'settings', 'mute', 'camera', 'leave', 'chat', 
+    'participants', 'share', 'record', 'background', 'effects', 'more',
+    'turn on', 'turn off', 'click', 'press', 'enter', 'exit'
+  ];
+
+  const lowerText = text.toLowerCase();
+  if (uiKeywords.some(keyword => lowerText.includes(keyword))) {
+    return null;
+  }
+
+  // Extract speaker and message
+  let speaker = 'Unknown';
+  let message = text;
+
+  // Try various patterns to extract speaker
+  const patterns = [
+    /^([^:]+):\s*(.+)$/,  // "Speaker: message"
+    /^([^:]+)\s+said:\s*(.+)$/,  // "Speaker said: message"
+    /^([^:]+)\s*-\s*(.+)$/,  // "Speaker - message"
+    /^([^:]+)\s*:\s*(.+)$/,   // "Speaker : message" (with spaces)
+    /^([^:]+)\s*said\s*(.+)$/i,  // "Speaker said message"
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      speaker = match[1].trim();
+      message = match[2].trim();
+      break;
     }
-    
-    // If no pattern matched, try to detect if it's a caption
-    if (message === text) {
-      // Check if this looks like a caption (not UI text)
-      const isCaption = !text.includes('button') && 
-                       !text.includes('menu') && 
-                       !text.includes('settings') &&
-                       !text.includes('mute') &&
-                       !text.includes('camera') &&
-                       !text.includes('leave') &&
-                       !text.includes('chat') &&
-                       !text.includes('participants') &&
-                       text.length > 5 &&
-                       text.length < 500;
-      
-      if (isCaption) {
-        // Assume it's a caption without speaker info
-        message = text;
-        speaker = 'Speaker';
-      } else {
-        return; // Skip UI text
-      }
+  }
+
+  // If no pattern matched, check if it looks like a caption
+  if (message === text) {
+    // Check if this looks like a caption (not UI text)
+    const isCaption = text.length > 5 && 
+                     text.length < 500 &&
+                     !text.includes('http') &&
+                     !text.includes('www') &&
+                     !text.match(/^\d+$/) && // Not just numbers
+                     !text.match(/^[A-Z\s]+$/) && // Not all caps
+                     text.includes(' '); // Has spaces (likely a sentence)
+
+    if (isCaption) {
+      message = text;
+      speaker = 'Speaker';
+    } else {
+      return null; // Skip non-caption text
     }
-    
-    // Generate timestamp
+  }
+
+  return { speaker, message };
+}
+
+// Function to capture transcript data
+function captureTranscript() {
+  const elements = findTranscriptElements();
+  
+  elements.forEach(element => {
+    const text = element.textContent?.trim();
+    if (!text) return;
+
+    const processed = processTranscriptText(text);
+    if (!processed) return;
+
+    const { speaker, message } = processed;
     const timestamp = new Date().toLocaleTimeString();
-    
-    // Check if this entry already exists
+
+    // Check for duplicates (within 5 seconds)
     const existingEntry = transcriptData.find(entry => 
       entry.text === message && 
       entry.speaker === speaker &&
-      Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 5000 // Within 5 seconds
+      Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 5000
     );
-    
+
     if (!existingEntry && message.length > 0) {
       transcriptData.push({
         timestamp,
@@ -268,69 +291,58 @@ function captureTranscript() {
       console.log('Captured transcript:', {timestamp, speaker, text: message});
     }
   });
-  
-  // Also try to capture from live captions area
-  captureFromLiveCaptions();
 }
 
-// Function to capture from Google Meet's live captions
-function captureFromLiveCaptions() {
-  // Look for the live captions container
-  const liveCaptionSelectors = [
-    '[data-mdc-dialog-id*="transcript"]',
-    '[aria-label*="Live captions"]',
-    '[aria-label*="Captions"]',
-    'div[role="log"]',
-    'div[aria-live="polite"]',
-    // Google Meet specific
-    '[data-is-muted="false"] div[role="log"]',
-    '[data-is-muted="false"] div[aria-live="polite"]'
-  ];
-  
-  liveCaptionSelectors.forEach(selector => {
-    try {
-      const containers = document.querySelectorAll(selector);
-      containers.forEach(container => {
-        const captionElements = container.querySelectorAll('div, span, p');
-        captionElements.forEach(element => {
-          const text = element.textContent?.trim();
-          if (text && text.length > 0 && text !== lastProcessedText) {
-            // Process the caption text
-            let speaker = 'Unknown';
-            let message = text;
-            
-            // Try to extract speaker
-            const speakerMatch = text.match(/^([^:]+):\s*(.+)$/);
-            if (speakerMatch) {
-              speaker = speakerMatch[1].trim();
-              message = speakerMatch[2].trim();
-            }
-            
-            const timestamp = new Date().toLocaleTimeString();
-            
-            // Check for duplicates
-            const existingEntry = transcriptData.find(entry => 
-              entry.text === message && 
-              entry.speaker === speaker &&
-              Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 5000
-            );
-            
-            if (!existingEntry && message.length > 0) {
-              transcriptData.push({
-                timestamp,
-                speaker,
-                text: message
-              });
-              lastProcessedText = text;
-              updateTranscriptDisplay();
-              console.log('Captured from live captions:', {timestamp, speaker, text: message});
+// Function to set up MutationObserver for real-time monitoring
+function setupTranscriptObserver() {
+  if (observer) {
+    observer.disconnect();
+  }
+
+  observer = new MutationObserver((mutations) => {
+    if (!isCapturing) return;
+
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const text = node.textContent?.trim();
+            if (text) {
+              const processed = processTranscriptText(text);
+              if (processed) {
+                const { speaker, message } = processed;
+                const timestamp = new Date().toLocaleTimeString();
+
+                // Check for duplicates
+                const existingEntry = transcriptData.find(entry => 
+                  entry.text === message && 
+                  entry.speaker === speaker &&
+                  Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 5000
+                );
+
+                if (!existingEntry && message.length > 0) {
+                  transcriptData.push({
+                    timestamp,
+                    speaker,
+                    text: message
+                  });
+                  lastProcessedText = text;
+                  updateTranscriptDisplay();
+                  console.log('Captured transcript (observer):', {timestamp, speaker, text: message});
+                }
+              }
             }
           }
         });
-      });
-    } catch (e) {
-      // Ignore errors
-    }
+      }
+    });
+  });
+
+  // Observe the entire document for changes
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
   });
 }
 
@@ -342,8 +354,13 @@ function toggleCapturing() {
     if (!transcriptWindow) {
       createTranscriptWindow();
     }
-    // Start periodic capture with shorter interval for better responsiveness
-    window.transcriptInterval = setInterval(captureTranscript, 500);
+    
+    // Set up observer for real-time monitoring
+    setupTranscriptObserver();
+    
+    // Also do periodic checks as backup
+    window.transcriptInterval = setInterval(captureTranscript, 1000);
+    
     console.log('Transcript capturing started');
   } else {
     // Stop capturing
@@ -351,6 +368,12 @@ function toggleCapturing() {
       clearInterval(window.transcriptInterval);
       window.transcriptInterval = null;
     }
+    
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    
     console.log('Transcript capturing stopped');
   }
 }
@@ -367,9 +390,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  // Check if we're in a Google Meet
   if (window.location.hostname === 'meet.google.com') {
-    console.log('Meet Transcript Capturer: Content script loaded');
+    console.log('Enhanced Meet Transcript Capturer: Content script loaded');
     console.log('Looking for transcript elements...');
   }
 });
@@ -378,11 +400,11 @@ document.addEventListener('DOMContentLoaded', () => {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (window.location.hostname === 'meet.google.com') {
-      console.log('Meet Transcript Capturer: Content script loaded');
+      console.log('Enhanced Meet Transcript Capturer: Content script loaded');
     }
   });
 } else {
   if (window.location.hostname === 'meet.google.com') {
-    console.log('Meet Transcript Capturer: Content script loaded');
+    console.log('Enhanced Meet Transcript Capturer: Content script loaded');
   }
 }
