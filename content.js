@@ -2,9 +2,8 @@
 let transcriptData = [];
 let isCapturing = false;
 let transcriptWindow = null;
-let lastFinalizedText = '';
-let currentGrowingText = '';
-let textStableCount = 0;
+let currentLine = null;
+let lastText = '';
 
 function createTranscriptWindow() {
   if (transcriptWindow) transcriptWindow.remove();
@@ -131,30 +130,26 @@ function captureCaptions() {
   });
   
   // If we have text
-  if (currentText) {
-    // If this is a new growing text (different from what we're tracking)
-    if (currentText !== currentGrowingText) {
-      currentGrowingText = currentText;
-      textStableCount = 0;
+  if (currentText && currentText !== lastText) {
+    // If this is a new line (no current line or text is shorter than current line)
+    if (!currentLine || currentText.length < currentLine.text.length) {
+      // Start a new line
+      const timestamp = new Date().toLocaleTimeString();
+      currentLine = { timestamp, text: currentText };
+      transcriptData.push(currentLine);
+      console.log('Started new line:', { timestamp, text: currentText });
     } else {
-      // Same text as before, increment stability counter
-      textStableCount++;
-      
-      // If text has been stable for 2 seconds (2 checks), it's probably complete
-      if (textStableCount >= 2 && currentText !== lastFinalizedText) {
-        const timestamp = new Date().toLocaleTimeString();
-        transcriptData.push({ timestamp, text: currentText });
-        updateTranscriptDisplay();
-        console.log('Captured finalized caption:', { timestamp, text: currentText });
-        lastFinalizedText = currentText;
-        currentGrowingText = '';
-        textStableCount = 0;
-      }
+      // Update the current line with new text
+      currentLine.text = currentText;
+      console.log('Updated current line:', { text: currentText });
     }
-  } else {
-    // No text found, reset tracking
-    currentGrowingText = '';
-    textStableCount = 0;
+    
+    updateTranscriptDisplay();
+    lastText = currentText;
+  } else if (!currentText) {
+    // No text found, reset current line
+    currentLine = null;
+    lastText = '';
   }
 }
 
