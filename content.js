@@ -3,6 +3,8 @@ let transcriptData = [];
 let isCapturing = false;
 let transcriptWindow = null;
 let lastFinalizedText = '';
+let currentGrowingText = '';
+let textStableCount = 0;
 
 function createTranscriptWindow() {
   if (transcriptWindow) transcriptWindow.remove();
@@ -128,13 +130,31 @@ function captureCaptions() {
     }
   });
   
-  // Only capture if we have text and it's longer than what we last captured
-  if (currentText && currentText.length > lastFinalizedText.length) {
-    const timestamp = new Date().toLocaleTimeString();
-    transcriptData.push({ timestamp, text: currentText });
-    updateTranscriptDisplay();
-    console.log('Captured caption:', { timestamp, text: currentText });
-    lastFinalizedText = currentText;
+  // If we have text
+  if (currentText) {
+    // If this is a new growing text (different from what we're tracking)
+    if (currentText !== currentGrowingText) {
+      currentGrowingText = currentText;
+      textStableCount = 0;
+    } else {
+      // Same text as before, increment stability counter
+      textStableCount++;
+      
+      // If text has been stable for 2 seconds (2 checks), it's probably complete
+      if (textStableCount >= 2 && currentText !== lastFinalizedText) {
+        const timestamp = new Date().toLocaleTimeString();
+        transcriptData.push({ timestamp, text: currentText });
+        updateTranscriptDisplay();
+        console.log('Captured finalized caption:', { timestamp, text: currentText });
+        lastFinalizedText = currentText;
+        currentGrowingText = '';
+        textStableCount = 0;
+      }
+    }
+  } else {
+    // No text found, reset tracking
+    currentGrowingText = '';
+    textStableCount = 0;
   }
 }
 
