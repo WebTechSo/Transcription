@@ -1,4 +1,4 @@
-// Filtered Content script for Google Meet Transcript Capturer
+// Ultra-Filtered Content script for Google Meet Transcript Capturer
 let transcriptData = [];
 let isCapturing = false;
 let transcriptWindow = null;
@@ -150,34 +150,38 @@ function updateTranscriptDisplay() {
   content.scrollTop = content.scrollHeight;
 }
 
-// Comprehensive list of UI elements to filter out
-const UI_FILTERS = [
-  // Button and control text
-  'arrow_downward', 'arrow_upward', 'close', 'add', 'remove', 'settings', 'menu',
-  'mute', 'unmute', 'camera', 'video', 'audio', 'chat', 'participants', 'share',
+// Ultra-aggressive filtering patterns
+const ULTRA_FILTERS = [
+  // UI elements from your example
+  'arrow_downward', 'arrow_upward', 'closed_caption_off', 'closed_caption',
+  'videocam', 'jump to bottom', 'jump to top',
+  
+  // Common UI patterns
+  'close', 'add', 'remove', 'settings', 'menu', 'mute', 'unmute',
+  'camera', 'video', 'audio', 'chat', 'participants', 'share',
   'record', 'background', 'effects', 'more', 'less', 'expand', 'collapse',
   'fullscreen', 'exit', 'leave', 'end', 'start', 'stop', 'pause', 'play',
   'volume', 'speaker', 'microphone', 'headphones', 'bluetooth',
   
-  // Navigation and UI text
-  'jump to bottom', 'jump to top', 'scroll', 'next', 'previous', 'back', 'forward',
-  'home', 'dashboard', 'profile', 'account', 'settings', 'preferences',
-  'help', 'support', 'feedback', 'report', 'bug', 'issue',
+  // Navigation
+  'scroll', 'next', 'previous', 'back', 'forward', 'home', 'dashboard',
+  'profile', 'account', 'preferences', 'help', 'support', 'feedback',
+  'report', 'bug', 'issue',
   
-  // Meeting-specific UI
-  'meeting', 'call', 'conference', 'room', 'link', 'invite', 'join', 'leave',
+  // Meeting UI
+  'meeting', 'call', 'conference', 'room', 'link', 'invite', 'join',
   'host', 'co-host', 'participant', 'attendee', 'guest', 'moderator',
   'permission', 'request', 'approve', 'deny', 'allow', 'block',
   
   // Caption controls
-  'live captions', 'captions', 'subtitles', 'transcript', 'closed caption',
+  'live captions', 'captions', 'subtitles', 'transcript',
   'turn on', 'turn off', 'enable', 'disable', 'show', 'hide',
   
-  // Technical terms
+  // Technical
   'loading', 'connecting', 'disconnected', 'reconnecting', 'error', 'failed',
   'success', 'complete', 'done', 'ready', 'preparing', 'initializing',
   
-  // Common UI patterns
+  // UI actions
   'click', 'press', 'tap', 'hover', 'drag', 'drop', 'select', 'choose',
   'confirm', 'cancel', 'ok', 'yes', 'no', 'save', 'delete', 'edit',
   'copy', 'paste', 'cut', 'undo', 'redo', 'refresh', 'reload',
@@ -188,29 +192,34 @@ const UI_FILTERS = [
   // Email patterns
   '@gmail.com', '@yahoo.com', '@hotmail.com', '@outlook.com',
   
-  // Numbers and codes
+  // Codes and IDs
   'meeting code', 'pin', 'password', 'id', 'number', 'code',
   
   // Status messages
   'joined as', 'left the meeting', 'entered the meeting', 'is now a host',
   'is now a co-host', 'is now a participant', 'muted', 'unmuted',
-  'turned on camera', 'turned off camera', 'started sharing', 'stopped sharing'
+  'turned on camera', 'turned off camera', 'started sharing', 'stopped sharing',
+  
+  // Single words that are likely UI
+  'you', 'speaker', 'unknown', 'arrow', 'jump', 'bottom', 'top',
+  'closed', 'caption', 'video', 'cam', 'add', 'remove', 'close',
+  'settings', 'menu', 'more', 'less', 'expand', 'collapse'
 ];
 
-// Function to check if text is UI element
+// Function to check if text is UI element (ultra-aggressive)
 function isUIElement(text) {
   if (!text || text.length < 2) return true;
   
   const lowerText = text.toLowerCase().trim();
   
-  // Check against UI filters
-  for (const filter of UI_FILTERS) {
+  // Check against ultra filters
+  for (const filter of ULTRA_FILTERS) {
     if (lowerText.includes(filter.toLowerCase())) {
       return true;
     }
   }
   
-  // Check for common UI patterns
+  // Aggressive pattern checks
   if (
     // Single words (likely buttons)
     !lowerText.includes(' ') ||
@@ -221,13 +230,19 @@ function isUIElement(text) {
     // Very short text (likely icons)
     text.length < 3 ||
     // Contains technical terms
-    /(button|icon|arrow|close|add|remove)/.test(lowerText) ||
+    /(button|icon|arrow|close|add|remove|jump|bottom|top)/.test(lowerText) ||
     // Contains URLs
-    /(http|www|\.com|\.org)/.test(lowerText) ||
+    /(http|www|\.com|\.org|meet\.google\.com)/.test(lowerText) ||
     // Contains email patterns
     /@.*\.com/.test(lowerText) ||
     // Contains meeting codes
-    /[a-z]{3}-[a-z]{4}-[a-z]{3}/.test(lowerText)
+    /[a-z]{3}-[a-z]{4}-[a-z]{3}/.test(lowerText) ||
+    // Contains common UI patterns
+    /(arrow_downward|arrow_upward|closed_caption|videocam)/.test(lowerText) ||
+    // Contains navigation text
+    /(jump to bottom|jump to top)/.test(lowerText) ||
+    // Contains single words that are likely UI
+    /^(you|speaker|unknown|arrow|jump|bottom|top|closed|caption|video|cam|add|remove|close|settings|menu|more|less|expand|collapse)$/.test(lowerText)
   ) {
     return true;
   }
@@ -235,7 +250,7 @@ function isUIElement(text) {
   return false;
 }
 
-// Function to check if text looks like actual speech
+// Function to check if text looks like actual speech (ultra-strict)
 function isSpeechText(text) {
   if (!text || text.length < 5) return false;
   
@@ -249,7 +264,7 @@ function isSpeechText(text) {
   
   // Must contain actual words (not just symbols)
   const wordCount = lowerText.split(' ').filter(word => 
-    word.length > 0 && /[a-zA-Z]/.test(word)
+    word.length > 0 && /[a-zA-Z\u0600-\u06FF]/.test(word) // Include Arabic/Persian characters
   ).length;
   
   if (wordCount < 2) return false;
@@ -258,12 +273,18 @@ function isSpeechText(text) {
   if (text === text.toUpperCase()) return false;
   
   // Must not contain technical patterns
-  if (/(http|www|@|\.com|button|icon|arrow)/.test(lowerText)) return false;
+  if (/(http|www|@|\.com|button|icon|arrow|jump|bottom|top|closed|caption|videocam)/.test(lowerText)) return false;
+  
+  // Must not be just single words
+  if (!lowerText.includes(' ')) return false;
+  
+  // Must not contain common UI patterns from your example
+  if (/(arrow_downward|arrow_upward|closed_caption_off|closed_caption|videocam|jump to bottom)/.test(lowerText)) return false;
   
   return true;
 }
 
-// Function to extract speaker and message from text
+// Function to extract speaker and message from text (ultra-strict)
 function extractSpeechInfo(text) {
   if (!isSpeechText(text)) return null;
   
@@ -286,7 +307,7 @@ function extractSpeechInfo(text) {
       message = match[2].trim();
       
       // Validate speaker name
-      if (speaker.length < 2 || speaker.length > 50) {
+      if (speaker.length < 2 || speaker.length > 50 || isUIElement(speaker)) {
         speaker = 'Unknown';
         message = text;
       }
@@ -304,8 +325,8 @@ function extractSpeechInfo(text) {
   return { speaker, message };
 }
 
-// Function to capture only speech transcripts
-function captureSpeechTranscripts() {
+// Function to capture only pure speech transcripts (ultra-strict)
+function capturePureSpeechTranscripts() {
   // Look specifically for live caption elements
   const captionSelectors = [
     // Google Meet live captions
@@ -331,7 +352,7 @@ function captureSpeechTranscripts() {
       elements.forEach(element => {
         const text = element.textContent?.trim();
         if (text && text !== lastProcessedText) {
-          // Check if this looks like actual speech
+          // Ultra-strict check for actual speech
           if (isSpeechText(text)) {
             const speechInfo = extractSpeechInfo(text);
             if (speechInfo) {
@@ -354,11 +375,11 @@ function captureSpeechTranscripts() {
   foundSpeech.forEach(({text, speaker, message}) => {
     const timestamp = new Date().toLocaleTimeString();
     
-    // Check for duplicates (within 10 seconds)
+    // Check for duplicates (within 15 seconds)
     const existingEntry = transcriptData.find(entry => 
       entry.text === message && 
       entry.speaker === speaker &&
-      Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 10000
+      Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 15000
     );
     
     if (!existingEntry && message.length > 0) {
@@ -369,7 +390,7 @@ function captureSpeechTranscripts() {
       });
       lastProcessedText = text;
       updateTranscriptDisplay();
-      console.log('Captured speech:', {timestamp, speaker, text: message});
+      console.log('Captured pure speech:', {timestamp, speaker, text: message});
     }
   });
 }
@@ -383,15 +404,15 @@ function toggleCapturing() {
       createTranscriptWindow();
     }
     // Start periodic capture with longer interval to reduce noise
-    window.transcriptInterval = setInterval(captureSpeechTranscripts, 2000);
-    console.log('Speech transcript capturing started');
+    window.transcriptInterval = setInterval(capturePureSpeechTranscripts, 3000);
+    console.log('Pure speech transcript capturing started');
   } else {
     // Stop capturing
     if (window.transcriptInterval) {
       clearInterval(window.transcriptInterval);
       window.transcriptInterval = null;
     }
-    console.log('Speech transcript capturing stopped');
+    console.log('Pure speech transcript capturing stopped');
   }
 }
 
@@ -408,8 +429,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.hostname === 'meet.google.com') {
-    console.log('Filtered Meet Transcript Capturer: Content script loaded');
-    console.log('Looking for speech transcripts only...');
+    console.log('Ultra-Filtered Meet Transcript Capturer: Content script loaded');
+    console.log('Looking for pure speech transcripts only...');
   }
 });
 
@@ -417,11 +438,11 @@ document.addEventListener('DOMContentLoaded', () => {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (window.location.hostname === 'meet.google.com') {
-      console.log('Filtered Meet Transcript Capturer: Content script loaded');
+      console.log('Ultra-Filtered Meet Transcript Capturer: Content script loaded');
     }
   });
 } else {
   if (window.location.hostname === 'meet.google.com') {
-    console.log('Filtered Meet Transcript Capturer: Content script loaded');
+    console.log('Ultra-Filtered Meet Transcript Capturer: Content script loaded');
   }
 }
