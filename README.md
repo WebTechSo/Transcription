@@ -1,160 +1,160 @@
 # Google Meet Transcript Capturer
 
-A Chrome extension that captures Google Meet transcripts and displays them in a copyable window.
+A Chrome extension that captures Google Meet transcripts and displays them in a copyable window, with advanced features including AI-powered summarization.
 
 ## Features
 
-- 🎤 **Real-time Transcript Capture**: Automatically captures transcript data from Google Meet
-- 📋 **Copyable Window**: Displays transcripts in a draggable, resizable window
-- 📝 **Easy Copy**: One-click copy functionality for all captured text
-- 🎨 **Modern UI**: Clean, Google-style interface that integrates seamlessly
-- 🔄 **Live Updates**: Transcripts update in real-time as the meeting progresses
-- 🚫 **UI Filtering**: Filters out UI elements and captures only actual speech
+- **Real-time Transcript Capture**: Captures live captions from Google Meet meetings
+- **Smart Text Processing**: Handles incremental captions like Google Meet's native display
+- **Copyable Window**: Easy-to-use floating window with copy functionality
+- **Transcript Storage**: Automatically saves transcripts for later access
+- **AI Summarization**: Generate meeting summaries using OpenAI
+- **Customizable Settings**: Adjust window position, size, and behavior
+- **Export Options**: Export transcripts as JSON files
+- **Admin Panel**: Comprehensive settings and transcript management interface
 
 ## Installation
 
-### Method 1: Load as Unpacked Extension (Recommended)
-
 1. **Download the Extension Files**
-   - Clone or download this repository to your local machine
+   ```bash
+   git clone <repository-url>
+   cd meet-transcript-capturer
+   ```
 
 2. **Load in Chrome**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top right)
    - Click "Load unpacked"
-   - Select the folder containing the extension files
+   - Select the extension folder
 
-3. **Verify Installation**
-   - The extension should appear in your extensions list
-   - You should see the extension icon in your Chrome toolbar
+3. **Enable Live Captions**
+   - Join a Google Meet call
+   - Click the "Live captions" button (CC icon) in the meeting controls
+   - Select your preferred language
 
 ## Usage
 
 ### Basic Usage
+1. Join a Google Meet call
+2. Enable live captions in the meeting
+3. Click the extension icon in your browser toolbar
+4. Click "Start Capturing" to begin
+5. A transcript window will appear on screen
+6. Use the "Copy" button to copy all text
+7. Click "Save" to store the transcript
 
-1. **Join a Google Meet**
-   - Navigate to [meet.google.com](https://meet.google.com)
-   - Join or start a meeting
+### Admin Panel / Settings
+1. Click the extension icon
+2. Click "Settings" to open the admin panel
+3. Configure your preferences:
+   - **Auto-start**: Automatically begin capturing when joining meetings
+   - **Window Position**: Choose where the transcript window appears
+   - **Window Size**: Select small, medium, or large window
+   - **OpenAI Integration**: Add your API key for AI summaries
+   - **Custom Prompts**: Set your preferred summary style
 
-2. **Enable Live Captions** (Required)
-   - Click "Live captions" in the bottom toolbar
-   - Select your language
-   - Verify captions appear on screen
+### OpenAI Integration
+1. Get an OpenAI API key from [OpenAI Platform](https://platform.openai.com/)
+2. Open the extension settings
+3. Enter your API key in the "OpenAI API Key" field
+4. Customize the summary prompt if desired
+5. Enable "Auto-summarize" to automatically generate summaries after meetings
+6. Use "Summarize with AI" button on individual transcripts
 
-3. **Start Capturing**
-   - Click the extension icon in your Chrome toolbar
-   - Click "Start Capturing" in the popup
-   - A transcript window will appear on the page
+## Features in Detail
 
-4. **View and Copy Transcripts**
-   - The transcript window shows all captured text
-   - Click "Copy" to copy all transcript text to clipboard
-   - Drag the window header to reposition it
-   - Click "×" to close the window
+### Transcript Management
+- **View All Transcripts**: See all captured transcripts in the admin panel
+- **Export Individual**: Export specific transcripts as JSON files
+- **Export All**: Download all transcripts in a single file
+- **Delete Transcripts**: Remove individual or all transcripts
+- **AI Summaries**: Generate concise meeting summaries using GPT-3.5
+
+### Settings Options
+- **Auto-start Capturing**: Begin automatically when joining meetings
+- **Window Position**: Top-right, top-left, bottom-right, or bottom-left
+- **Window Size**: Small (300x400), Medium (400x500), or Large (500x600)
+- **Custom Summary Prompts**: Tailor AI summaries to your needs
+- **Auto-summarization**: Automatically generate summaries after meetings
 
 ### Advanced Features
-
-- **Real-time Updates**: Transcripts update automatically as people speak
-- **Speaker Identification**: Attempts to identify different speakers
-- **Timestamp Tracking**: Each entry includes a timestamp
+- **Smart Caption Handling**: Processes incremental captions like Google Meet's native display
+- **Speaker Tracking**: Maintains one line per speaker until they finish speaking
+- **Real-time Updates**: Transcript window updates as people speak
 - **Draggable Window**: Move the transcript window anywhere on screen
-- **UI Filtering**: Automatically filters out UI elements and captures only speech
-
-## How It Works
-
-The extension works by:
-
-1. **Content Script Injection**: Automatically injects into Google Meet pages
-2. **DOM Monitoring**: Watches for transcript elements in the page
-3. **UI Filtering**: Filters out UI elements like buttons, controls, and navigation
-4. **Data Extraction**: Captures speaker names, timestamps, and text content
-5. **Real-time Display**: Updates the transcript window as new data is captured
+- **Meeting Duration**: Tracks and displays meeting duration
+- **Error Handling**: Graceful handling of network issues and API errors
 
 ## File Structure
 
 ```
+meet-transcript-capturer/
 ├── manifest.json          # Extension configuration
-├── content.js            # Main content script (runs on meet.google.com)
-├── popup.html           # Extension popup interface
-├── popup.js             # Popup functionality
-├── background.js        # Background service worker
-├── TROUBLESHOOTING.md   # Troubleshooting guide
-└── README.md           # This file
+├── content.js            # Main transcript capture logic
+├── popup.html            # Extension popup interface
+├── popup.js              # Popup functionality
+├── options.html          # Admin panel interface
+├── options.js            # Admin panel functionality
+├── background.js         # Background service worker
+└── README.md            # This file
 ```
-
-## Permissions
-
-The extension requires the following permissions:
-
-- **activeTab**: To interact with the current Google Meet tab
-- **storage**: To save extension settings (future feature)
-- **scripting**: To inject content scripts
-- **host_permissions**: Access to meet.google.com
 
 ## Troubleshooting
 
-### Extension Not Working?
+### Extension Won't Load
+- Ensure all files are present in the extension folder
+- Check that `manifest.json` is valid JSON
+- Verify Chrome's developer mode is enabled
+- Try reloading the extension
 
-1. **Check if you're on Google Meet**
-   - The extension only works on `meet.google.com`
-   - Make sure you're in an active meeting
+### No Transcripts Captured
+- Make sure live captions are enabled in Google Meet
+- Check that you're on a `meet.google.com` page
+- Verify the extension is active (blue icon in toolbar)
+- Try refreshing the Google Meet page
 
-2. **Enable Live Captions**
-   - Live captions must be enabled for the extension to work
-   - Click "Live captions" in the bottom toolbar
-   - Select your language
+### OpenAI Summaries Not Working
+- Verify your OpenAI API key is correct
+- Check that you have sufficient API credits
+- Ensure the API key has access to GPT-3.5-turbo
+- Check the browser console for error messages
 
-3. **Refresh the Page**
-   - Sometimes the content script needs a page refresh
-   - Reload the Google Meet page and try again
-
-4. **Check Console for Errors**
-   - Open Chrome DevTools (F12)
-   - Look for any error messages in the Console tab
-
-### Transcript Not Capturing?
-
-1. **Enable Live Captions**
-   - Make sure live captions are enabled in your Google Meet
-   - The extension captures from the live caption elements
-
-2. **Check Meeting Settings**
-   - Some meetings may have captions disabled
-   - Ask the meeting organizer to enable live captions
-
-3. **Browser Compatibility**
-   - Ensure you're using the latest version of Chrome
-   - The extension requires Chrome 88+ (Manifest V3)
-
-## Development
-
-### Making Changes
-
-1. **Edit Files**: Modify the JavaScript, HTML, or CSS files
-2. **Reload Extension**: Go to `chrome://extensions/` and click the refresh icon
-3. **Test**: Navigate to Google Meet and test your changes
-
-### Debugging
-
-- **Content Script**: Check the Console tab in DevTools on the Google Meet page
-- **Popup**: Right-click the extension icon and "Inspect popup"
-- **Background**: Go to `chrome://extensions/` and click "service worker" link
+### Window Not Appearing
+- Check that the extension is active
+- Try clicking "Start Capturing" again
+- Verify you're on a Google Meet page
+- Check browser console for errors
 
 ## Privacy & Security
 
-- **Local Processing**: All transcript processing happens locally in your browser
-- **No Data Collection**: The extension doesn't send any data to external servers
-- **Open Source**: All code is visible and can be audited
-- **Minimal Permissions**: Only requests necessary permissions for functionality
+- **Local Storage**: All transcripts are stored locally in your browser
+- **No Data Sharing**: Transcripts are never sent to external servers (except OpenAI when generating summaries)
+- **API Key Security**: Your OpenAI API key is stored locally and never shared
+- **Optional Features**: AI summarization is completely optional
+
+## Technical Details
+
+### Permissions Used
+- `activeTab`: Access to current Google Meet tab
+- `storage`: Save settings and transcripts locally
+- `scripting`: Inject content scripts into Google Meet
+
+### API Integration
+- **OpenAI GPT-3.5-turbo**: For meeting summarization
+- **Chrome Storage API**: For local data persistence
+- **Chrome Tabs API**: For tab communication
+
+### Browser Compatibility
+- Chrome 88+ (Manifest V3)
+- Chromium-based browsers (Edge, Brave, etc.)
 
 ## Contributing
 
-Feel free to contribute improvements:
-
 1. Fork the repository
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
@@ -162,12 +162,11 @@ This project is open source and available under the MIT License.
 
 ## Support
 
-If you encounter issues or have questions:
-
+For issues, feature requests, or questions:
 1. Check the troubleshooting section above
-2. Review the console for error messages
+2. Review the browser console for error messages
 3. Create an issue in the repository
 
 ---
 
-**Note**: This extension is designed for educational and productivity purposes. Please respect privacy and obtain consent when recording or sharing meeting transcripts.
+**Note**: This extension requires Google Meet's live captions to be enabled. The extension captures the text that Google Meet displays on screen, so it cannot work without captions enabled.

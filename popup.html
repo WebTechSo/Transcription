@@ -1,125 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <style>
-    body {
-      width: 300px;
-      padding: 20px;
-      font-family: 'Google Sans', Arial, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    
-    .header h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 500;
-    }
-    
-    .header p {
-      margin: 5px 0 0 0;
-      font-size: 12px;
-      opacity: 0.8;
-    }
-    
-    .status {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    
-    .status-indicator {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 8px;
-      background: #ea4335;
-    }
-    
-    .status-indicator.active {
-      background: #34a853;
-    }
-    
-    .toggle-btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-    
-    .toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
-    }
-    
-    .toggle-btn:active {
-      transform: translateY(0);
-    }
-    
-    .instructions {
-      margin-top: 20px;
-      font-size: 12px;
-      opacity: 0.8;
-      line-height: 1.4;
-    }
-    
-    .instructions h3 {
-      margin: 0 0 8px 0;
-      font-size: 13px;
-    }
-    
-    .instructions ul {
-      margin: 0;
-      padding-left: 15px;
-    }
-    
-    .instructions li {
-      margin-bottom: 4px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Transcript Capturer</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 16px;
+            font-family: 'Google Sans', Arial, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            color: #4285f4;
+            font-size: 18px;
+            margin: 0 0 8px 0;
+        }
+        .header p {
+            color: #5f6368;
+            font-size: 12px;
+            margin: 0;
+        }
+        .status {
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .status.active {
+            border-color: #34a853;
+            background: #e6f4ea;
+            color: #137333;
+        }
+        .status.inactive {
+            border-color: #ea4335;
+            background: #fce8e6;
+            color: #c5221f;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .btn {
+            flex: 1;
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn:hover {
+            background: #3367d6;
+        }
+        .btn.secondary {
+            background: #5f6368;
+        }
+        .btn.secondary:hover {
+            background: #494c50;
+        }
+        .info {
+            background: #e8f0fe;
+            border: 1px solid #4285f4;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            color: #1967d2;
+        }
+        .info ul {
+            margin: 8px 0 0 0;
+            padding-left: 16px;
+        }
+        .info li {
+            margin-bottom: 4px;
+        }
+    </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Meet Transcript Capturer</h1>
-    <p>Capture and copy Google Meet transcripts</p>
-  </div>
-  
-  <div class="status">
-    <div>
-      <span class="status-indicator" id="status-indicator"></span>
-      <span id="status-text">Not capturing</span>
+    <div class="header">
+        <h1>Meet Transcript Capturer</h1>
+        <p>Capture and manage Google Meet transcripts</p>
     </div>
-  </div>
-  
-  <button class="toggle-btn" id="toggle-btn">Start Capturing</button>
-  
-  <div class="instructions">
-    <h3>How to use:</h3>
-    <ul>
-      <li>Join a Google Meet call</li>
-      <li>Click "Start Capturing" to begin</li>
-      <li>A transcript window will appear</li>
-      <li>Use the "Copy" button to copy all text</li>
-      <li>Drag the window to reposition it</li>
-    </ul>
-  </div>
-  
-  <script src="popup.js"></script>
+    
+    <div class="status" id="status">
+        <div id="statusText">Checking status...</div>
+    </div>
+    
+    <div class="button-group">
+        <button class="btn" id="toggleBtn">Start Capturing</button>
+        <button class="btn secondary" id="settingsBtn">Settings</button>
+    </div>
+    
+    <div class="info">
+        <strong>How to use:</strong>
+        <ul>
+            <li>Enable live captions in Google Meet</li>
+            <li>Click "Start Capturing" to begin</li>
+            <li>Transcript window will appear on screen</li>
+            <li>Use "Settings" to manage transcripts and AI summaries</li>
+        </ul>
+    </div>
+    
+    <script src="popup.js"></script>
 </body>
 </html>

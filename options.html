@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Transcript Capturer - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #202124;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: #4285f4;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #4285f4;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background: #3367d6;
+        }
+        
+        .btn-secondary {
+            background: #5f6368;
+        }
+        
+        .btn-secondary:hover {
+            background: #494c50;
+        }
+        
+        .btn-danger {
+            background: #ea4335;
+        }
+        
+        .btn-danger:hover {
+            background: #d93025;
+        }
+        
+        .btn-success {
+            background: #34a853;
+        }
+        
+        .btn-success:hover {
+            background: #2d8e47;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #e6f4ea;
+            color: #137333;
+            border: 1px solid #34a853;
+        }
+        
+        .status.error {
+            background: #fce8e6;
+            color: #c5221f;
+            border: 1px solid #ea4335;
+        }
+        
+        .status.info {
+            background: #e8f0fe;
+            color: #1967d2;
+            border: 1px solid #4285f4;
+        }
+        
+        .transcript-item {
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .transcript-item h3 {
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+        
+        .transcript-item .timestamp {
+            color: #5f6368;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .transcript-item .text {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dadce0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .summary-box {
+            background: #f0f8ff;
+            border: 1px solid #4285f4;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .summary-box h4 {
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4285f4;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Meet Transcript Capturer</h1>
+            <p>Manage your extension settings and transcripts</p>
+        </div>
+        
+        <!-- General Settings -->
+        <div class="section">
+            <h2>General Settings</h2>
+            <div class="form-group">
+                <label for="autoStart">Auto-start capturing when joining a meeting</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="autoStart">
+                    <span>Enable automatic transcript capture</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="windowPosition">Default window position</label>
+                <select id="windowPosition">
+                    <option value="top-right">Top Right</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="windowSize">Window size</label>
+                <select id="windowSize">
+                    <option value="small">Small (300x400)</option>
+                    <option value="medium">Medium (400x500)</option>
+                    <option value="large">Large (500x600)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- OpenAI Integration -->
+        <div class="section">
+            <h2>OpenAI Integration</h2>
+            <div class="form-group">
+                <label for="openaiKey">OpenAI API Key</label>
+                <input type="password" id="openaiKey" placeholder="sk-...">
+                <small>Your API key is stored locally and never shared</small>
+            </div>
+            <div class="form-group">
+                <label for="summaryPrompt">Custom summary prompt</label>
+                <textarea id="summaryPrompt" placeholder="Summarize this meeting transcript in a concise way, highlighting key points, action items, and important decisions made."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="autoSummarize">Auto-summarize after meetings</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="autoSummarize">
+                    <span>Automatically generate summary when meeting ends</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transcript Management -->
+        <div class="section">
+            <h2>Transcript Management</h2>
+            <div class="button-group">
+                <button class="btn" id="exportAll">Export All Transcripts</button>
+                <button class="btn btn-secondary" id="clearAll">Clear All Transcripts</button>
+                <button class="btn btn-danger" id="deleteAll">Delete All Data</button>
+            </div>
+            <div id="transcriptList"></div>
+        </div>
+        
+        <!-- Status Messages -->
+        <div id="status"></div>
+        
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>
