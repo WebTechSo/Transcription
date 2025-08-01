@@ -104,7 +104,7 @@ class OptionsManager {
         if (!data || !Array.isArray(data)) return 'No transcript data';
         
         return data.map(entry => 
-            `${entry.timestamp} - Speaker: ${entry.text}`
+            `${entry.timestamp} - ${entry.speaker || 'Unknown Speaker'}: ${entry.text}`
         ).join('<br><br>');
     }
 

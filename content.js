@@ -58,7 +58,7 @@ async function generateSummary(transcriptData) {
     }
     
     const transcriptText = transcriptData.map(entry => 
-        `${entry.timestamp} - Speaker: ${entry.text}`
+        `${entry.timestamp} - ${entry.speaker}: ${entry.text}`
     ).join('\n');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -91,6 +91,85 @@ async function generateSummary(transcriptData) {
 
     const data = await response.json();
     return data.choices[0].message.content;
+}
+
+// Extract speaker name from caption element
+function extractSpeakerName(element) {
+    // Look for speaker name in various possible locations
+    const speakerSelectors = [
+        'span[data-speaker-name]',
+        'div[data-speaker-name]',
+        '.speaker-name',
+        '.caption-speaker',
+        '[aria-label*="speaker"]',
+        'span[class*="speaker"]',
+        'div[class*="speaker"]'
+    ];
+    
+    for (const selector of speakerSelectors) {
+        const speakerElement = element.querySelector(selector);
+        if (speakerElement) {
+            const speakerName = speakerElement.textContent?.trim();
+            if (speakerName && speakerName.length > 0) {
+                return speakerName;
+            }
+        }
+    }
+    
+    // Check if the element itself has speaker information
+    const ariaLabel = element.getAttribute('aria-label');
+    if (ariaLabel && ariaLabel.includes('speaker')) {
+        const match = ariaLabel.match(/(?:speaker|said by)\s*:?\s*([^,]+)/i);
+        if (match) {
+            return match[1].trim();
+        }
+    }
+    
+    // Check for speaker name in the text content pattern
+    const textContent = element.textContent || '';
+    const speakerPatterns = [
+        /^([^:]+):\s*(.+)$/,  // "Speaker Name: text"
+        /^([^:]+)\s+said\s+(.+)$/i,  // "Speaker Name said text"
+        /^([^:]+)\s*-\s*(.+)$/  // "Speaker Name - text"
+    ];
+    
+    for (const pattern of speakerPatterns) {
+        const match = textContent.match(pattern);
+        if (match) {
+            const speakerName = match[1].trim();
+            if (speakerName && speakerName.length > 0 && speakerName.length < 50) {
+                return speakerName;
+            }
+        }
+    }
+    
+    // If no speaker found, try to detect from context
+    return detectSpeakerFromContext(element);
+}
+
+// Detect speaker from context (fallback method)
+function detectSpeakerFromContext(element) {
+    // Look for speaker indicators in parent elements
+    const parent = element.parentElement;
+    if (parent) {
+        const parentText = parent.textContent || '';
+        const speakerMatch = parentText.match(/([^:]+):\s*$/);
+        if (speakerMatch) {
+            return speakerMatch[1].trim();
+        }
+    }
+    
+    // Check for user's own name in the page
+    const userElements = document.querySelectorAll('[data-user-name], [data-email], .user-name');
+    for (const userEl of userElements) {
+        const userName = userEl.textContent?.trim();
+        if (userName && userName.length > 0) {
+            return userName;
+        }
+    }
+    
+    // Default speaker name
+    return 'Unknown Speaker';
 }
 
 function createTranscriptWindow() {
@@ -219,7 +298,7 @@ function updateTranscriptDisplay() {
     return;
   }
   const transcriptText = transcriptData
-    .map(entry => `${entry.timestamp} - Speaker: ${entry.text}`)
+    .map(entry => `${entry.timestamp} - ${entry.speaker}: ${entry.text}`)
     .join('\n\n');
   content.innerHTML = transcriptText.replace(/\n/g, '<br>');
   content.scrollTop = content.scrollHeight;
@@ -229,26 +308,36 @@ function updateTranscriptDisplay() {
 function captureCaptions() {
   const captionElements = document.querySelectorAll('div.ygicle.VbkSUe');
   let currentText = '';
+  let currentSpeaker = '';
+  let currentElement = null;
+  
   captionElements.forEach(element => {
     const text = element.textContent?.trim();
     if (text && text.length > currentText.length) {
       currentText = text;
+      currentElement = element;
     }
   });
   
   // If we have text and it's different from what we last processed
   if (currentText && currentText !== lastText) {
+    // Extract speaker name from the current element
+    if (currentElement) {
+      currentSpeaker = extractSpeakerName(currentElement);
+    }
+    
     // If this is a new line (no current line or text is shorter than current line)
     if (!currentLine || currentText.length < currentLine.text.length) {
       // Start a new line
       const timestamp = new Date().toLocaleTimeString();
-      currentLine = { timestamp, text: currentText };
+      currentLine = { timestamp, speaker: currentSpeaker, text: currentText };
       transcriptData.push(currentLine);
-      console.log('Started new line:', { timestamp, text: currentText });
+      console.log('Started new line:', { timestamp, speaker: currentSpeaker, text: currentText });
     } else {
       // Update the current line with new text
       currentLine.text = currentText;
-      console.log('Updated current line:', { text: currentText });
+      currentLine.speaker = currentSpeaker; // Update speaker in case it changed
+      console.log('Updated current line:', { speaker: currentSpeaker, text: currentText });
     }
     
     updateTranscriptDisplay();
