@@ -9,44 +9,24 @@ A Chrome extension that captures Google Meet transcripts and displays them in a 
 - 📝 **Easy Copy**: One-click copy functionality for all captured text
 - 🎨 **Modern UI**: Clean, Google-style interface that integrates seamlessly
 - 🔄 **Live Updates**: Transcripts update in real-time as the meeting progresses
+- 🚫 **UI Filtering**: Filters out UI elements and captures only actual speech
 
 ## Installation
 
-### Method 1: Load as Unpacked Extension (Recommended for Development)
+### Method 1: Load as Unpacked Extension (Recommended)
 
 1. **Download the Extension Files**
    - Clone or download this repository to your local machine
 
-2. **Generate Icons** (if needed)
-   - Open `create_icons.html` in your browser
-   - Right-click on each icon and save as:
-     - `icon16.png` (16x16)
-     - `icon48.png` (48x48) 
-     - `icon128.png` (128x128)
-   - Place these files in the extension directory
-
-3. **Load in Chrome**
+2. **Load in Chrome**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top right)
    - Click "Load unpacked"
    - Select the folder containing the extension files
 
-4. **Verify Installation**
+3. **Verify Installation**
    - The extension should appear in your extensions list
    - You should see the extension icon in your Chrome toolbar
-
-### Method 2: Package and Install
-
-1. **Package the Extension**
-   - Go to `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Pack extension"
-   - Select the extension folder
-   - This will create a `.crx` file
-
-2. **Install the Package**
-   - Drag the `.crx` file into Chrome
-   - Confirm the installation
 
 ## Usage
 
@@ -56,12 +36,17 @@ A Chrome extension that captures Google Meet transcripts and displays them in a 
    - Navigate to [meet.google.com](https://meet.google.com)
    - Join or start a meeting
 
-2. **Start Capturing**
+2. **Enable Live Captions** (Required)
+   - Click "Live captions" in the bottom toolbar
+   - Select your language
+   - Verify captions appear on screen
+
+3. **Start Capturing**
    - Click the extension icon in your Chrome toolbar
    - Click "Start Capturing" in the popup
    - A transcript window will appear on the page
 
-3. **View and Copy Transcripts**
+4. **View and Copy Transcripts**
    - The transcript window shows all captured text
    - Click "Copy" to copy all transcript text to clipboard
    - Drag the window header to reposition it
@@ -73,6 +58,7 @@ A Chrome extension that captures Google Meet transcripts and displays them in a 
 - **Speaker Identification**: Attempts to identify different speakers
 - **Timestamp Tracking**: Each entry includes a timestamp
 - **Draggable Window**: Move the transcript window anywhere on screen
+- **UI Filtering**: Automatically filters out UI elements and captures only speech
 
 ## How It Works
 
@@ -80,8 +66,9 @@ The extension works by:
 
 1. **Content Script Injection**: Automatically injects into Google Meet pages
 2. **DOM Monitoring**: Watches for transcript elements in the page
-3. **Data Extraction**: Captures speaker names, timestamps, and text content
-4. **Real-time Display**: Updates the transcript window as new data is captured
+3. **UI Filtering**: Filters out UI elements like buttons, controls, and navigation
+4. **Data Extraction**: Captures speaker names, timestamps, and text content
+5. **Real-time Display**: Updates the transcript window as new data is captured
 
 ## File Structure
 
@@ -91,10 +78,7 @@ The extension works by:
 ├── popup.html           # Extension popup interface
 ├── popup.js             # Popup functionality
 ├── background.js        # Background service worker
-├── create_icons.html    # Icon generator (optional)
-├── icon16.png          # Extension icon (16x16)
-├── icon48.png          # Extension icon (48x48)
-├── icon128.png         # Extension icon (128x128)
+├── TROUBLESHOOTING.md   # Troubleshooting guide
 └── README.md           # This file
 ```
 
@@ -115,17 +99,18 @@ The extension requires the following permissions:
    - The extension only works on `meet.google.com`
    - Make sure you're in an active meeting
 
-2. **Refresh the Page**
+2. **Enable Live Captions**
+   - Live captions must be enabled for the extension to work
+   - Click "Live captions" in the bottom toolbar
+   - Select your language
+
+3. **Refresh the Page**
    - Sometimes the content script needs a page refresh
    - Reload the Google Meet page and try again
 
-3. **Check Console for Errors**
+4. **Check Console for Errors**
    - Open Chrome DevTools (F12)
    - Look for any error messages in the Console tab
-
-4. **Reinstall the Extension**
-   - Remove the extension from Chrome
-   - Reload it using "Load unpacked"
 
 ### Transcript Not Capturing?
 
