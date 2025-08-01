@@ -1,8 +1,9 @@
-// Google Meet Transcript Capturer - Targeted for <div class="ygicle VbkSUe">
+// Google Meet Transcript Capturer - Only capture finalized captions
 let transcriptData = [];
 let isCapturing = false;
 let transcriptWindow = null;
-let lastProcessedText = '';
+let lastFinalizedText = '';
+let lastRawText = '';
 
 function createTranscriptWindow() {
   if (transcriptWindow) transcriptWindow.remove();
@@ -117,26 +118,25 @@ function updateTranscriptDisplay() {
   content.scrollTop = content.scrollHeight;
 }
 
-// Only capture from <div class="ygicle VbkSUe">
+// Only capture finalized captions
 function captureCaptions() {
   const captionElements = document.querySelectorAll('div.ygicle.VbkSUe');
+  let currentText = '';
   captionElements.forEach(element => {
     const text = element.textContent?.trim();
-    if (text && text !== lastProcessedText) {
-      const timestamp = new Date().toLocaleTimeString();
-      // Prevent duplicates within 10 seconds
-      const existingEntry = transcriptData.find(entry =>
-        entry.text === text &&
-        Math.abs(new Date(`2000-01-01 ${entry.timestamp}`) - new Date(`2000-01-01 ${timestamp}`)) < 10000
-      );
-      if (!existingEntry) {
-        transcriptData.push({ timestamp, text });
-        lastProcessedText = text;
-        updateTranscriptDisplay();
-        console.log('Captured caption:', { timestamp, text });
-      }
+    if (text && text.length > currentText.length) {
+      currentText = text;
     }
   });
+  // Only save if the currentText is not a prefix of the next one (i.e., it "stopped growing")
+  if (currentText && currentText !== lastFinalizedText && lastRawText && !currentText.startsWith(lastRawText)) {
+    const timestamp = new Date().toLocaleTimeString();
+    transcriptData.push({ timestamp, text: lastRawText });
+    updateTranscriptDisplay();
+    console.log('Captured finalized caption:', { timestamp, text: lastRawText });
+    lastFinalizedText = lastRawText;
+  }
+  lastRawText = currentText;
 }
 
 function toggleCapturing() {
