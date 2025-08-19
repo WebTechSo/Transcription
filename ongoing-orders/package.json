@@ -1,0 +1,18 @@
+{
+  "name": "ongoing-orders-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI to fetch Ongoing WMS orders by date range (XML + WSSE)",
+  "scripts": {
+    "start": "node fetch_orders.js",
+    "fetch": "node fetch_orders.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "minimist": "^1.2.8",
+    "xml2js": "^0.6.2"
+  }
+}
+
